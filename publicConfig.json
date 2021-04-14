@@ -1,0 +1,10 @@
+{
+    "settings": {
+        "1": true,
+        "2": false
+    },
+    "keys": [
+        "FOO123",
+        "BAR456"
+    ]
+}
