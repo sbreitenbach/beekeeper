@@ -1,8 +1,10 @@
+import boto3
 import json
 import logging
 import requests
 import random
 import time
+from boto3.dynamodb.conditions import Key
 from bs4 import BeautifulSoup
 from requests import RequestException
 
@@ -13,6 +15,31 @@ logging.basicConfig(filename='log.log',
                     datefmt="%Y-%m-%dT%H:%M:%S%z",
                     level=logging.INFO)
 ##End Config##
+
+
+def was_instock(site, table):
+
+    data = table.query(
+        KeyConditionExpression=Key('site').eq(site)
+    )
+
+    stock_status = data['Items'][0]['instock']
+    print(stock_status)
+
+    return data
+
+
+def update_stock_status(site, stock_status, table):
+
+    if(stock_status):
+        table.update_item(Key={'site': site},
+                          UpdateExpression="SET instock = :true",
+                          ExpressionAttributeValues={':true': 'true'})
+    else:
+        table.update_item(Key={'site': site},
+                          UpdateExpression="SET instock = :false",
+                          ExpressionAttributeValues={':false': 'false'})
+    return
 
 
 def get_data(site, proxies, user_agents):
@@ -68,15 +95,31 @@ def in_stock(soup):
         print("No buttons found")
 
 
-if __name__ == '__main__':
+def main():
 
     with open('secretConfig.json') as json_file:
         data = json.load(json_file)
         my_proxies = data["proxies"]
         my_user_agents = data["user_agents"]
         my_sites = data["sites"]
+        my_region = data["region"]
+        my_table = data["table "]
+        my_min_sleep = data["min_sleep"]
+        my_max_sleep = data["max_sleep "]
+
+        dynamodb = boto3.resource('dynamodb', region_name=my_region)
+
+        table = dynamodb.Table('beehive')
 
         for site in my_sites:
             soup = get_data(site, my_proxies, my_user_agents)
             in_stock(soup)
-            time.sleep(random.randint(5, 37))
+            was_instock(site, table)
+            if((in_stock and not was_instock) or (not in_stock and was_instock)):
+                update_stock_status(site, in_stock, table)
+            time.sleep(random.randint(my_min_sleep, my_max_sleep))
+
+
+def lambda_handler(event, context):
+    main()
+    return
