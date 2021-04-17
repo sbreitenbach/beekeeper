@@ -4,6 +4,7 @@ log.log
 tryStuff.py
 .DS_Store
 secretConfig.json
+libraries/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

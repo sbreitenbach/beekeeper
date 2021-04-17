@@ -24,7 +24,6 @@ def was_instock(site, table):
     )
 
     stock_status = data['Items'][0]['instock']
-    print(stock_status)
 
     return data
 
@@ -82,17 +81,14 @@ def in_stock(soup):
         first_button = buttons[0]
         button_string = str(first_button)
         if "Sold out" in button_string:
-            print("out of stock")
             return False
         elif "Add to cart" in button_string:
-            print("in stock")
             return True
         else:
-            print("Not sure if in stock.")
             logging.warn("Not sure if in stock.")
             return False
     else:
-        print("No buttons found")
+        logging.warn("No buttons found")
 
 
 def main():
@@ -105,7 +101,7 @@ def main():
         my_region = data["region"]
         my_table = data["table "]
         my_min_sleep = data["min_sleep"]
-        my_max_sleep = data["max_sleep "]
+        my_max_sleep = data["max_sleep"]
 
         dynamodb = boto3.resource('dynamodb', region_name=my_region)
 
@@ -113,8 +109,8 @@ def main():
 
         for site in my_sites:
             soup = get_data(site, my_proxies, my_user_agents)
-            in_stock(soup)
-            was_instock(site, table)
+            instock = in_stock(soup)
+            was_instock = was_instock(site, table)
             if((in_stock and not was_instock) or (not in_stock and was_instock)):
                 update_stock_status(site, in_stock, table)
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
