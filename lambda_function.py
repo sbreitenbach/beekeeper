@@ -4,6 +4,7 @@ import logging
 import requests
 import random
 import time
+import tweepy
 from boto3.dynamodb.conditions import Key
 from bs4 import BeautifulSoup
 from requests import RequestException
@@ -15,6 +16,9 @@ logging.basicConfig(filename='log.log',
                     datefmt="%Y-%m-%dT%H:%M:%S%z",
                     level=logging.INFO)
 ##End Config##
+
+HAPPY_EMOJIS = ['😀', '😃', '😄', '😄', '🤩', '🤗', '👉', '🙌']
+SAD_EMOJIS = ['😒', '😔', '😢', '😦', '😢', '😭']
 
 
 def was_instock(site, table):
@@ -90,6 +94,22 @@ def in_stock(soup):
         logging.warn("No buttons found")
 
 
+def tweet_stock_change(is_product_instock, site, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET):
+
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+    auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+
+    api = tweepy.API(auth)
+
+    if is_product_instock:
+        emoji = random.choice(HAPPY_EMOJIS)
+        update = f"This product is back in stock! {emoji} {site}"
+    else:
+        emoji = random.choice(SAD_EMOJIS)
+        update = f"This product is now out of stock! {emoji} {site}"
+    api.update_status(update)
+
+
 def main():
 
     with open('secretConfig.json') as json_file:
@@ -101,6 +121,10 @@ def main():
         my_table = data["table"]
         my_min_sleep = data["min_sleep"]
         my_max_sleep = data["max_sleep"]
+        my_consumer_key = data["twitter"]["CONSUMER_KEY"]
+        my_consumer_secret = data["twitter"]["CONSUMER_SECRET"]
+        my_access_token = data["twitter"]["ACCESS_TOKEN"]
+        my_access_toke_secret = data["twitter"]["ACCESS_TOKEN_SECRET"]
 
         dynamodb = boto3.resource('dynamodb', region_name=my_region)
 
@@ -116,6 +140,8 @@ def main():
                 logging.info(
                     f"Changing status of {site} to {is_product_instock}")
                 update_stock_status(site, is_product_instock, table)
+                tweet_stock_change(is_product_instock, site, my_consumer_key,
+                                   my_consumer_secret, my_access_token, my_access_toke_secret)
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
 
 
