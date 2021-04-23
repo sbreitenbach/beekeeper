@@ -66,7 +66,7 @@ def get_data(site, proxies, user_agents):
 
         c = result.content
 
-        soup = BeautifulSoup(c)
+        soup = BeautifulSoup(c,"html.parser")
     except requests.exceptions.RequestException as e:
         logging.warn(f"Could not reach {site} due to {e}")
         return None
