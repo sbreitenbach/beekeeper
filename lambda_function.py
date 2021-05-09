@@ -29,7 +29,10 @@ def was_instock(site, table):
 
     stock_status = data['Items'][0]['instock']
 
-    return stock_status
+    if(stock_status == "true"):
+        return True
+    else:
+        return False
 
 
 def update_stock_status(site, stock_status, table):
@@ -66,7 +69,9 @@ def get_data(site, proxies, user_agents):
 
         c = result.content
 
-        soup = BeautifulSoup(c,"html.parser")
+
+        soup = BeautifulSoup(c,features="html.parser")
+
     except requests.exceptions.RequestException as e:
         logging.warn(f"Could not reach {site} due to {e}")
         return None
@@ -92,6 +97,7 @@ def in_stock(soup):
             return False
     else:
         logging.warn("No buttons found")
+        return False
 
 
 def tweet_stock_change(is_product_instock, site, CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET):
