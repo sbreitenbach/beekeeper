@@ -1,4 +1,6 @@
 # beekeeper
-## A script to check if products are in stock
+## A bot to check if products are in stock
 
-This script requires using AWS Lambda and AWS DynamoDB.
+Checkout tweets [here](https://twitter.com/beekeep86576354).
+
+Running this script requires using AWS Lambda and AWS DynamoDB.
