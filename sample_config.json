@@ -1,0 +1,24 @@
+{
+    "proxies": {
+        "http": "proxies",
+        "https": "proxies"
+    },
+    "user_agents": [
+        "useragent1",
+        "useragent2"
+    ],
+    "sites": [
+        "site1",
+        "site2"
+    ],
+    "region": "regiot",
+    "table": "table",
+    "min_sleep": 0,
+    "max_sleep": 0,
+    "twitter": {
+        "CONSUMER_KEY": "your_key",
+        "CONSUMER_SECRET": "your_secret",
+        "ACCESS_TOKEN": "your_token",
+        "ACCESS_TOKEN_SECRET": "your_secret"
+    }
+}
