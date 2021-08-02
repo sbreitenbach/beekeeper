@@ -50,7 +50,6 @@ def update_stock_status(site, stock_status, table):
 def get_data(site, proxies, user_agents):
     user_agent = random.choice(user_agents)
     headers = {
-        'authority': 'kobeesco.com',
         'upgrade-insecure-requests': '1',
         'user-agent': user_agent,
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -58,7 +57,6 @@ def get_data(site, proxies, user_agents):
         'sec-fetch-mode': 'navigate',
         'sec-fetch-user': '?1',
         'sec-fetch-dest': 'document',
-        'referer': 'https://kobeesco.com/',
         'accept-language': 'en-US,en;q=0.9'
     }
     try:
@@ -69,8 +67,7 @@ def get_data(site, proxies, user_agents):
 
         c = result.content
 
-
-        soup = BeautifulSoup(c,features="html.parser")
+        soup = BeautifulSoup(c, features="html.parser")
 
     except requests.exceptions.RequestException as e:
         logging.warn(f"Could not reach {site} due to {e}")

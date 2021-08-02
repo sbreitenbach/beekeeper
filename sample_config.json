@@ -7,11 +7,23 @@
         "useragent1",
         "useragent2"
     ],
-    "sites": [
-        "site1",
-        "site2"
-    ],
-    "region": "regiot",
+    "products": {
+        "product1": {
+            "category": "category1",
+            "url": "url1",
+            "button_class": "button_class1",
+            "button_text_instock": "button_text_instock1",
+            "button_text_outofstock": "button_text_outofstock1"
+        },
+        "product2": {
+            "category": "category2",
+            "url": "url2",
+            "button_class": "button_class2",
+            "button_text_instock": "button_text_instock2",
+            "button_text_outofstock": "button_text_outofstock2"
+        }
+    },
+    "region": "region",
     "table": "table",
     "min_sleep": 0,
     "max_sleep": 0,
