@@ -119,7 +119,7 @@ def main():
         data = json.load(json_file)
         my_proxies = data["proxies"]
         my_user_agents = data["user_agents"]
-        my_sites = data["sites"]
+        my_products = data["products"]
         my_region = data["region"]
         my_table = data["table"]
         my_min_sleep = data["min_sleep"]
@@ -133,17 +133,21 @@ def main():
 
         table = dynamodb.Table(my_table)
 
-        for site in my_sites:
-            soup = get_data(site, my_proxies, my_user_agents)
+        for product in my_products:
+            url = product["url"]
+            button_class = product["button_class"]
+            button_text_instock = product["button_text_instock"]
+            button_text_outofstock = product["button_text_outofstock"]
+            soup = get_data(url, my_proxies, my_user_agents)
             is_product_instock = in_stock(soup)
-            logging.debug(f"{site} status is {is_product_instock}")
-            was_product_instock = was_instock(site, table)
-            logging.debug(f"{site} status was {was_product_instock}")
+            logging.debug(f"{product} status is {is_product_instock}")
+            was_product_instock = was_instock(url, table)
+            logging.debug(f"{product} status was {was_product_instock}")
             if((is_product_instock and not was_product_instock) or (not is_product_instock and was_product_instock)):
                 logging.info(
-                    f"Changing status of {site} to {is_product_instock}")
-                update_stock_status(site, is_product_instock, table)
-                tweet_stock_change(is_product_instock, site, my_consumer_key,
+                    f"Changing status of {product} to {is_product_instock}")
+                update_stock_status(url, is_product_instock, table)
+                tweet_stock_change(is_product_instock, url, my_consumer_key,
                                    my_consumer_secret, my_access_token, my_access_toke_secret)
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
 
