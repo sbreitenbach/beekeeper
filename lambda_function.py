@@ -50,7 +50,6 @@ def update_stock_status(site, stock_status, table):
 def get_data(site, proxies, user_agents):
     user_agent = random.choice(user_agents)
     headers = {
-        'authority': 'kobeesco.com',
         'upgrade-insecure-requests': '1',
         'user-agent': user_agent,
         'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
@@ -58,7 +57,6 @@ def get_data(site, proxies, user_agents):
         'sec-fetch-mode': 'navigate',
         'sec-fetch-user': '?1',
         'sec-fetch-dest': 'document',
-        'referer': 'https://kobeesco.com/',
         'accept-language': 'en-US,en;q=0.9'
     }
     try:
@@ -69,8 +67,7 @@ def get_data(site, proxies, user_agents):
 
         c = result.content
 
-
-        soup = BeautifulSoup(c,features="html.parser")
+        soup = BeautifulSoup(c, features="html.parser")
 
     except requests.exceptions.RequestException as e:
         logging.warn(f"Could not reach {site} due to {e}")
@@ -79,18 +76,18 @@ def get_data(site, proxies, user_agents):
     return soup
 
 
-def in_stock(soup):
+def in_stock(soup, button_class, button_text_instock, button_text_outofstock):
     if soup is None:
         return False
 
     buttons = soup.find_all(
-        'button', class_='btn product-form__cart-submit btn--secondary-accent')
+        'button', class_=button_class)
     if(buttons):
         first_button = buttons[0]
         button_string = str(first_button)
-        if "Sold out" in button_string:
+        if button_text_outofstock in button_string:
             return False
-        elif "Add to cart" in button_string:
+        elif button_text_instock in button_string:
             return True
         else:
             logging.warn("Not sure if in stock.")
@@ -122,7 +119,7 @@ def main():
         data = json.load(json_file)
         my_proxies = data["proxies"]
         my_user_agents = data["user_agents"]
-        my_sites = data["sites"]
+        my_products = data["products"]
         my_region = data["region"]
         my_table = data["table"]
         my_min_sleep = data["min_sleep"]
@@ -136,20 +133,29 @@ def main():
 
         table = dynamodb.Table(my_table)
 
-        for site in my_sites:
-            soup = get_data(site, my_proxies, my_user_agents)
-            is_product_instock = in_stock(soup)
-            logging.debug(f"{site} status is {is_product_instock}")
-            was_product_instock = was_instock(site, table)
-            logging.debug(f"{site} status was {was_product_instock}")
+        for product in my_products:
+            url = data['products'][product]["url"]
+            button_class = data['products'][product]["button_class"]
+            button_text_instock = data['products'][product]["button_text_instock"]
+            button_text_outofstock = data['products'][product]["button_text_outofstock"]
+            soup = get_data(url, my_proxies, my_user_agents)
+            is_product_instock = in_stock(soup, button_class, button_text_instock, button_text_outofstock)
+            #print(f"{product} status is {is_product_instock}")
+            #"""
+            logging.debug(f"{product} status is {is_product_instock}")
+            was_product_instock = was_instock(url, table)
+            logging.debug(f"{product} status was {was_product_instock}")
             if((is_product_instock and not was_product_instock) or (not is_product_instock and was_product_instock)):
                 logging.info(
-                    f"Changing status of {site} to {is_product_instock}")
-                update_stock_status(site, is_product_instock, table)
-                tweet_stock_change(is_product_instock, site, my_consumer_key,
+                    f"Changing status of {product} to {is_product_instock}")
+                update_stock_status(url, is_product_instock, table)
+                tweet_stock_change(is_product_instock, url, my_consumer_key,
                                    my_consumer_secret, my_access_token, my_access_toke_secret)
+            #"""
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
 
 
 def lambda_handler(event, context):
     main()
+
+#main()
