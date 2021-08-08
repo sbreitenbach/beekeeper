@@ -76,18 +76,18 @@ def get_data(site, proxies, user_agents):
     return soup
 
 
-def in_stock(soup):
+def in_stock(soup, button_class, button_text_instock, button_text_outofstock):
     if soup is None:
         return False
 
     buttons = soup.find_all(
-        'button', class_='btn product-form__cart-submit btn--secondary-accent')
+        'button', class_=button_class)
     if(buttons):
         first_button = buttons[0]
         button_string = str(first_button)
-        if "Sold out" in button_string:
+        if button_text_outofstock in button_string:
             return False
-        elif "Add to cart" in button_string:
+        elif button_text_instock in button_string:
             return True
         else:
             logging.warn("Not sure if in stock.")
@@ -134,12 +134,14 @@ def main():
         table = dynamodb.Table(my_table)
 
         for product in my_products:
-            url = product["url"]
-            button_class = product["button_class"]
-            button_text_instock = product["button_text_instock"]
-            button_text_outofstock = product["button_text_outofstock"]
+            url = data['products'][product]["url"]
+            button_class = data['products'][product]["button_class"]
+            button_text_instock = data['products'][product]["button_text_instock"]
+            button_text_outofstock = data['products'][product]["button_text_outofstock"]
             soup = get_data(url, my_proxies, my_user_agents)
-            is_product_instock = in_stock(soup)
+            is_product_instock = in_stock(soup, button_class, button_text_instock, button_text_outofstock)
+            #print(f"{product} status is {is_product_instock}")
+            #"""
             logging.debug(f"{product} status is {is_product_instock}")
             was_product_instock = was_instock(url, table)
             logging.debug(f"{product} status was {was_product_instock}")
@@ -149,8 +151,11 @@ def main():
                 update_stock_status(url, is_product_instock, table)
                 tweet_stock_change(is_product_instock, url, my_consumer_key,
                                    my_consumer_secret, my_access_token, my_access_toke_secret)
+            #"""
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
 
 
 def lambda_handler(event, context):
     main()
+
+#main()
