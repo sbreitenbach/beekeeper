@@ -70,7 +70,7 @@ def get_data(site, proxies, user_agents):
         soup = BeautifulSoup(c, features="html.parser")
 
     except requests.exceptions.RequestException as e:
-        logging.warn(f"Could not reach {site} due to {e}")
+        logging.warning(f"Could not reach {site} due to {e}")
         return None
 
     return soup
@@ -90,10 +90,10 @@ def in_stock(soup, button_class, button_text_instock, button_text_outofstock):
         elif button_text_instock in button_string:
             return True
         else:
-            logging.warn("Not sure if in stock.")
+            logging.warning("Not sure if in stock.")
             return False
     else:
-        logging.warn("No buttons found")
+        logging.warning("No buttons found")
         return False
 
 
