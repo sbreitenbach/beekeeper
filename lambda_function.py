@@ -70,7 +70,7 @@ def get_data(site, proxies, user_agents):
         soup = BeautifulSoup(c, features="html.parser")
 
     except requests.exceptions.RequestException as e:
-        logging.warn(f"Could not reach {site} due to {e}")
+        logging.warning(f"Could not reach {site} due to {e}")
         return None
 
     return soup
@@ -90,10 +90,10 @@ def in_stock(soup, button_class, button_text_instock, button_text_outofstock):
         elif button_text_instock in button_string:
             return True
         else:
-            logging.warn("Not sure if in stock.")
+            logging.warning("Not sure if in stock.")
             return False
     else:
-        logging.warn("No buttons found")
+        logging.warning("No buttons found")
         return False
 
 
@@ -112,6 +112,13 @@ def tweet_stock_change(is_product_instock, site, CONSUMER_KEY, CONSUMER_SECRET, 
         update = f"This product is now out of stock! {emoji} {site}"
     api.update_status(update)
 
+def stock_changed(is_product_instock, was_product_instock):
+    if is_product_instock and not was_product_instock:
+        return True
+    elif not is_product_instock and was_product_instock:
+        return True
+    else:
+        return False
 
 def main():
 
@@ -145,7 +152,7 @@ def main():
             logging.debug(f"{product} status is {is_product_instock}")
             was_product_instock = was_instock(url, table)
             logging.debug(f"{product} status was {was_product_instock}")
-            if((is_product_instock and not was_product_instock) or (not is_product_instock and was_product_instock)):
+            if(stock_changed(is_product_instock, was_product_instock)):
                 logging.info(
                     f"Changing status of {product} to {is_product_instock}")
                 update_stock_status(url, is_product_instock, table)
