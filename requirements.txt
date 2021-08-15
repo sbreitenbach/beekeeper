@@ -1,5 +1,5 @@
 boto3==1.17.69
-bs4==4.9.3
+beautifulsoup4==4.9.3
 pytest==4.4.0
 requests==2.25.1
 tweepy==3.10.0
