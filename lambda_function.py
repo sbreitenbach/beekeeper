@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 import random
+import sys
 import time
 import tweepy
 from boto3.dynamodb.conditions import Key
@@ -120,8 +121,7 @@ def stock_changed(is_product_instock, was_product_instock):
     else:
         return False
 
-def main():
-
+def main(test_run=False):
     with open('secretConfig.json') as json_file:
         data = json.load(json_file)
         my_proxies = data["proxies"]
@@ -147,22 +147,25 @@ def main():
             button_text_outofstock = data['products'][product]["button_text_outofstock"]
             soup = get_data(url, my_proxies, my_user_agents)
             is_product_instock = in_stock(soup, button_class, button_text_instock, button_text_outofstock)
-            #print(f"{product} status is {is_product_instock}")
-            #"""
+            if test_run:
+                print(f"{product} status is {is_product_instock}")
             logging.debug(f"{product} status is {is_product_instock}")
-            was_product_instock = was_instock(url, table)
-            logging.debug(f"{product} status was {was_product_instock}")
-            if(stock_changed(is_product_instock, was_product_instock)):
-                logging.info(
-                    f"Changing status of {product} to {is_product_instock}")
-                update_stock_status(url, is_product_instock, table)
-                tweet_stock_change(is_product_instock, url, my_consumer_key,
-                                   my_consumer_secret, my_access_token, my_access_toke_secret)
-            #"""
+            if not test_run:
+                was_product_instock = was_instock(url, table)
+                logging.debug(f"{product} status was {was_product_instock}")
+                if(stock_changed(is_product_instock, was_product_instock)):
+                    logging.info(
+                        f"Changing status of {product} to {is_product_instock}")
+                    update_stock_status(url, is_product_instock, table)
+                    tweet_stock_change(is_product_instock, url, my_consumer_key,
+                                    my_consumer_secret, my_access_token, my_access_toke_secret)
             time.sleep(random.randint(my_min_sleep, my_max_sleep))
 
 
 def lambda_handler(event, context):
     main()
 
-#main()
+if "test" in sys.argv:
+    logging.debug("Starting test run")
+    test_run = True
+    main(test_run)
